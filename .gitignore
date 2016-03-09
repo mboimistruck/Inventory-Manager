@@ -1,3 +1,7 @@
+*.bat
+*.class
+*.jar
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
