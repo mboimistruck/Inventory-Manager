@@ -1,26 +1,3 @@
-/*
-
-NOTES:
-
-Clear the buffer or something, idk
-
-Scanner is taking in that the value is what is in the file and not updating
-with the reflected changes
-
-i.e: it has a value of 2 saved on file, you add 4, it becomes 6.
-Another instance of the same UPC pops up, you add 8 this time, it becomes 10.
-This is because the Scanner thinks it's still 2 and not updating.
-
-
-EDIT - It's because I'm reading from the excel file
-
-*/
-
-
-
-
-
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -42,10 +19,7 @@ import javafx.stage.Stage;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
 
-import java.awt.*;
 import javax.swing.*;
-import java.beans.*;
-import java.awt.event.*;
 import java.text.*;
 import java.io.*;
 import java.util.*;
@@ -83,7 +57,6 @@ public class InventoryManager extends Application {
         TextField upcTextField = new TextField();
         upcTextField.setMaxWidth(95);
         grid.add(upcTextField, 3, 3);
-
 
         Label priceLabel = new Label("Price:");
         priceLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
@@ -184,14 +157,7 @@ public class InventoryManager extends Application {
                   if(!containsString) {
                       JOptionPane.showMessageDialog(null,"The UPC already exists,\n "+
                                                   "please try again.");
-                    String temp = String.valueOf(
-                    (Integer.parseInt(quantityTextField.getText()) + Integer.parseInt(storage))
-                    );
-
-                  //  Scanner readUPC = new Scanner(new File(upcFileName));
-                  //  String test = readUPC.next();
-                    //System.out.println(test);
-                    //readUPC.close();
+                    String temp = String.valueOf((Integer.parseInt(quantityTextField.getText()) + Integer.parseInt(storage)));
                     upcWriter.write(temp);
                     upcWriter.write(System.getProperty( "line.separator" ));
                     upcWriter.write(priceTextField.getText());
@@ -206,24 +172,23 @@ public class InventoryManager extends Application {
                     fileWriter.write("\t"+ quantityTextField.getText());
                     fileWriter.close();
 
-
                     upcWriter.write(quantityTextField.getText());
                     upcWriter.write(System.getProperty( "line.separator" ));
                     upcWriter.write(priceTextField.getText());
+                    upcWriter.write(System.getProperty( "line.separator" ));
+                    upcWriter.write(upcTextField.getText());
                     upcWriter.close();
                     JOptionPane.showMessageDialog(null,"Entry added!");
 
                   }
               }
               catch(IOException ex) {
-
-                  JOptionPane.showMessageDialog(null,"Error writing to file '" + fileName + "', make sure Excel is closed. Folder/File may also not exist!");
+                JOptionPane.showMessageDialog(null,"Error writing to file '" + fileName + "', make sure Excel is closed. Folder/File may also not exist!");
               }
-
-                upcTextField.clear();
-                priceTextField.clear();
-                quantityTextField.clear();
-                upcTextField.requestFocus();
+              upcTextField.clear();
+              priceTextField.clear();
+              quantityTextField.clear();
+              upcTextField.requestFocus();
             }
         });
 
