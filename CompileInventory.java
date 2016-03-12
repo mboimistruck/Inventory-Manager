@@ -42,13 +42,6 @@ public class CompileInventory {
       System.out.println("THROWN");
 
     }
-
-    for (int i = 0; i < files; i++) {
-      System.out.println(storedValues[i]);
-
-    }
-    System.out.println("Total: $"+f.format(total));
-
   }
 
   public static void main(String[] args) {

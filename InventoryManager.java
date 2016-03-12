@@ -24,16 +24,53 @@ import java.text.*;
 import java.io.*;
 import java.util.*;
 import java.nio.file.*;
-
+import java.text.DecimalFormat;
 
 public class InventoryManager extends Application {
+
     static String fileName = "Library.xls";
     static String storage;
 
     public static void main(String[] args) {
         launch(args);
     }
+    static int files;
+    static String[] storedValues;
+    static double total;
 
+    public static void calculateTotal() {
+      File folder = new File("Library/UPC/");
+      File[] listOfFiles = folder.listFiles();
+      DecimalFormat f = new DecimalFormat("##.00");
+
+      try {
+        files = (int)Files.list(Paths.get("Library/UPC/")).count();
+        storedValues = new String[files];
+        FileWriter fileWriter = new FileWriter("Output.xls", false);
+
+        for (int i = 0; i < listOfFiles.length; i++) {
+          storedValues[i] = String.valueOf(
+            f.format(
+              Double.parseDouble(Files.readAllLines(Paths.get("Library/UPC/"+listOfFiles[i].getName())).get(0)) *
+              Double.parseDouble(Files.readAllLines(Paths.get("Library/UPC/"+listOfFiles[i].getName())).get(1)))
+          );
+          total += Double.parseDouble(storedValues[i]);
+
+          fileWriter.write(String.valueOf(Files.readAllLines(Paths.get("Library/UPC/"+listOfFiles[i].getName())).get(2)));
+          fileWriter.write("\t"+String.valueOf(Files.readAllLines(Paths.get("Library/UPC/"+listOfFiles[i].getName())).get(1)));
+          fileWriter.write("\t"+String.valueOf(Files.readAllLines(Paths.get("Library/UPC/"+listOfFiles[i].getName())).get(0)));
+          fileWriter.write(System.getProperty( "line.separator" ));
+          //fileWriter.close();
+        }
+        fileWriter.write(System.getProperty( "line.separator" ));
+        fileWriter.write("TOTAL INVENTORY: $" +f.format(total));
+        fileWriter.close();
+      }
+      catch(IOException ex) {
+        System.out.println("THROWN");
+
+      }
+    }
     @Override
     public void start(Stage primaryStage) {
         setUserAgentStylesheet(STYLESHEET_MODENA);
@@ -74,6 +111,16 @@ public class InventoryManager extends Application {
         quantityTextField.setMaxWidth(45);
         grid.add(quantityTextField, 3, 5);
 
+        priceTextField.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+          @Override
+          public void handle(KeyEvent ke) {
+            if (ke.getCode().equals(KeyCode.ENTER)) {
+              //System.out.println(upcTextField.getText());
+                quantityTextField.requestFocus();
+              }
+            }
+        });
+
         upcTextField.textProperty().addListener((observable, oldValue, newValue) -> {
           if (newValue.length() > 11) {
 
@@ -81,12 +128,12 @@ public class InventoryManager extends Application {
               @Override
               public void handle(KeyEvent ke) {
                 if (ke.getCode().equals(KeyCode.ENTER)) {
-                  System.out.println(upcTextField.getText());
+                  //System.out.println(upcTextField.getText());
                   try {
-                  String testy = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(1);
-                  storage = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(0);
-                                    quantityTextField.requestFocus();
-                                    priceTextField.setText(testy);
+                    String testy = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(1);
+                    storage = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(0);
+                    quantityTextField.requestFocus();
+                    priceTextField.setText(testy);
                   }
                   catch(IOException ex) {
                     priceTextField.requestFocus();
@@ -102,7 +149,14 @@ public class InventoryManager extends Application {
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_CENTER);
         hbBtn.getChildren().add(btn);
-        grid.add(hbBtn, 1, 9);
+        grid.add(hbBtn, 1, 8);
+
+        Button btn2 = new Button("Calculate Inventory");
+        btn2.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        HBox hbBtn2 = new HBox(10);
+        hbBtn2.setAlignment(Pos.BOTTOM_CENTER);
+        hbBtn2.getChildren().add(btn2);
+        grid.add(hbBtn2, 1, 9);
 
         quantityTextField.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
           @Override
@@ -130,6 +184,13 @@ public class InventoryManager extends Application {
         grid.add(departmentLabel, 0, 1);
         grid.add(departmentComboBox, 3, 1);
 
+        btn2.setOnAction(new EventHandler<ActionEvent>() {
+          @Override
+          public void handle(ActionEvent e) {
+            calculateTotal();
+          }
+        });
+
         btn.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -148,26 +209,28 @@ public class InventoryManager extends Application {
 
                 while(readFile.hasNext())
                   if(searchWord.equals(readFile.next())) {
-                    System.out.println(readFile.next());
+                    //System.out.println(readFile.next());
                       containsString = false;
                       //readFile.close();
                       break;
 
                   }
                   if(!containsString) {
-                      JOptionPane.showMessageDialog(null,"The UPC already exists,\n "+
-                                                  "please try again.");
+                      //JOptionPane.showMessageDialog(null,"The UPC already exists,\n "+
+                                                  //"please try again.");
                     String temp = String.valueOf((Integer.parseInt(quantityTextField.getText()) + Integer.parseInt(storage)));
                     upcWriter.write(temp);
                     upcWriter.write(System.getProperty( "line.separator" ));
                     upcWriter.write(priceTextField.getText());
+                    upcWriter.write(System.getProperty( "line.separator" ));
+                    upcWriter.write(upcTextField.getText());
                     upcWriter.close();
 
                   }else {
                     FileWriter fileWriter = new FileWriter(fileName, true);
                     fileWriter.write(System.getProperty( "line.separator" ));
                     fileWriter.write(departmentComboBox.getSelectionModel().getSelectedItem().toString());
-                    fileWriter.write("\t"+ upcTextField.getText());
+                    fileWriter.write("\t"+ String.valueOf(upcTextField.getText()));
                     fileWriter.write("\t"+ priceTextField.getText());
                     fileWriter.write("\t"+ quantityTextField.getText());
                     fileWriter.close();
@@ -178,12 +241,12 @@ public class InventoryManager extends Application {
                     upcWriter.write(System.getProperty( "line.separator" ));
                     upcWriter.write(upcTextField.getText());
                     upcWriter.close();
-                    JOptionPane.showMessageDialog(null,"Entry added!");
+                    //JOptionPane.showMessageDialog(null,"Entry added!");
 
                   }
               }
               catch(IOException ex) {
-                JOptionPane.showMessageDialog(null,"Error writing to file '" + fileName + "', make sure Excel is closed. Folder/File may also not exist!");
+                //JOptionPane.showMessageDialog(null,"Error writing to file '" + fileName + "', make sure Excel is closed. Folder/File may also not exist!");
               }
               upcTextField.clear();
               priceTextField.clear();
