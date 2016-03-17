@@ -25,11 +25,13 @@ import java.io.*;
 import java.util.*;
 import java.nio.file.*;
 import java.text.DecimalFormat;
+import java.awt.Desktop;
 
 public class InventoryManager extends Application {
 
     static String fileName = "Library.xls";
-    static String storage;
+    static String quantityFromFile;
+    static String priceFromFile;
 
     public static void main(String[] args) {
         launch(args);
@@ -111,6 +113,39 @@ public class InventoryManager extends Application {
         quantityTextField.setMaxWidth(45);
         grid.add(quantityTextField, 3, 5);
 
+        final Text outputText = new Text();
+        outputText.setFont(Font.font("Arial", FontWeight.NORMAL, 10));
+        grid.add(outputText, 0, 10);
+
+        final ComboBox departmentComboBox = new ComboBox();
+        departmentComboBox.getItems().addAll(
+            "Grocery",
+            "Dairy",
+            "Frozen"
+        );
+
+        Label departmentLabel = new Label("Department:                           ");
+        departmentLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        grid.add(departmentLabel, 0, 1);
+        grid.add(departmentComboBox, 3, 1);
+
+
+        Button addBtn = new Button("Add");
+        addBtn.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        HBox addHbBtn = new HBox(10);
+        addHbBtn.setAlignment(Pos.BOTTOM_CENTER);
+        addHbBtn.getChildren().add(addBtn);
+        grid.add(addHbBtn, 1, 8);
+
+        Button calculateBtn = new Button("Calculate Inventory");
+        calculateBtn.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        HBox calculateHbBtn = new HBox(10);
+        calculateHbBtn.setAlignment(Pos.BOTTOM_CENTER);
+        calculateHbBtn.getChildren().add(calculateBtn);
+        grid.add(calculateHbBtn, 1, 9);
+
+        // Below contains the eventhandlers/Filters for buttons/Keypresses
+
         priceTextField.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
           @Override
           public void handle(KeyEvent ke) {
@@ -130,10 +165,10 @@ public class InventoryManager extends Application {
                 if (ke.getCode().equals(KeyCode.ENTER)) {
                   //System.out.println(upcTextField.getText());
                   try {
-                    String testy = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(1);
-                    storage = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(0);
+                    priceFromFile = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(1);
+                    quantityFromFile = Files.readAllLines(Paths.get("Library/UPC/"+ upcTextField.getText() +".txt")).get(0);
                     quantityTextField.requestFocus();
-                    priceTextField.setText(testy);
+                    priceTextField.setText(priceFromFile);
                   }
                   catch(IOException ex) {
                     priceTextField.requestFocus();
@@ -144,54 +179,34 @@ public class InventoryManager extends Application {
           }
         });
 
-        Button btn = new Button("Add");
-        btn.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
-        HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_CENTER);
-        hbBtn.getChildren().add(btn);
-        grid.add(hbBtn, 1, 8);
-
-        Button btn2 = new Button("Calculate Inventory");
-        btn2.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
-        HBox hbBtn2 = new HBox(10);
-        hbBtn2.setAlignment(Pos.BOTTOM_CENTER);
-        hbBtn2.getChildren().add(btn2);
-        grid.add(hbBtn2, 1, 9);
-
         quantityTextField.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
           @Override
             public void handle(KeyEvent ke) {
               if (ke.getCode().equals(KeyCode.ENTER)) {
-                btn.requestFocus();
-                btn.fire();
+                addBtn.requestFocus();
+                addBtn.fire();
             }
           }
         });
 
-        final Text outputText = new Text();
-        outputText.setFont(Font.font("Arial", FontWeight.NORMAL, 10));
-        grid.add(outputText, 0, 10);
-
-        final ComboBox departmentComboBox = new ComboBox();
-        departmentComboBox.getItems().addAll(
-            "Grocery",
-            "Dairy",
-            "Frozen"
-        );
-
-        Label departmentLabel = new Label("Department:                           ");
-        departmentLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
-        grid.add(departmentLabel, 0, 1);
-        grid.add(departmentComboBox, 3, 1);
-
-        btn2.setOnAction(new EventHandler<ActionEvent>() {
+        calculateBtn  .setOnAction(new EventHandler<ActionEvent>() {
           @Override
           public void handle(ActionEvent e) {
+            Desktop desktop = Desktop.getDesktop();
+            File file = new File("Output.xls");
             calculateTotal();
+
+            try {
+              outputText.setText("");
+              desktop.open(file);
+            }
+            catch(IOException ex) {
+
+            }
           }
         });
 
-        btn.setOnAction(new EventHandler<ActionEvent>() {
+        addBtn.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent e) {
@@ -218,7 +233,7 @@ public class InventoryManager extends Application {
                   if(!containsString) {
                       //JOptionPane.showMessageDialog(null,"The UPC already exists,\n "+
                                                   //"please try again.");
-                    String temp = String.valueOf((Integer.parseInt(quantityTextField.getText()) + Integer.parseInt(storage)));
+                    String temp = String.valueOf((Integer.parseInt(quantityTextField.getText()) + Integer.parseInt(quantityFromFile)));
                     upcWriter.write(temp);
                     upcWriter.write(System.getProperty( "line.separator" ));
                     upcWriter.write(priceTextField.getText());
